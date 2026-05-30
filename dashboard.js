@@ -113,14 +113,13 @@ function renderCompleted() {
   });
 }
 
-function addCompleted() {
-  const input = document.getElementById('completedInput');
-  const name = input.value.trim();
-  if (!name) return;
-  completed.unshift(name);
+function addOtherCompleted() {
+  const name = prompt('Project name:');
+  if (!name || !name.trim()) return;
+  completed.unshift(`Other: ${name.trim()}`);
   saveCompleted();
   renderCompleted();
-  input.value = '';
+  showNotif(`Completed: Other: ${name.trim()}`);
 }
 
 function removeCompleted(i) {
@@ -134,10 +133,6 @@ function removeCompleted(i) {
     renderCompleted();
   });
 }
-
-document.getElementById('completedInput').addEventListener('keydown', e => {
-  if (e.key === 'Enter') addCompleted();
-});
 
 let projects = loadProjects();
 let activityLog = [];
@@ -233,7 +228,7 @@ function render() {
         <div style="flex:1;min-width:0;">
           <div class="card-header" onclick="toggleCard(${i})">
             <span class="energy-dot energy-${p.energy}"></span>
-            <span class="card-title">${p.name}&nbsp;<button class="rename-btn" onclick="event.stopPropagation(); renameProject(${i})" title="Rename project">🖊</button>&nbsp;<span class="session-count">${(p.sessions||0) > 0 ? `(${p.sessions} sessions)` : ''}</span></span>
+            <span class="card-title">${p.name}&nbsp;<button class="rename-btn" onclick="event.stopPropagation(); renameProject(${i})" title="Rename project">🖊</button>&nbsp;<button class="quick-session-btn" onclick="event.stopPropagation(); logQuickSession(${i})" title="Log a session without starting timer">++</button>&nbsp;<span class="session-count">${(p.sessions||0) > 0 ? `(${p.sessions} sessions)` : ''}</span></span>
             ${p.frog ? '<span style="font-size:0.9rem;" title="Eat the frog!">🐸</span>' : ''}
             ${!p.disabled && isRecent(p.lastSession) ? '<span style="font-size:0.9rem;" title="Worked on in last 3 days">🔥</span>' : (!p.disabled && isOverdue(p) ? '<span style="font-size:0.9rem;" title="No activity in 2+ weeks">❗</span>' : '')}
             <span class="card-tag">${p.category}</span>
@@ -268,7 +263,6 @@ function render() {
             </div>
             <div class="card-actions">
               <button class="start-session-btn" onclick="startSession(${i})">▶ Start 45-min session</button>
-              <button class="quick-session-btn" onclick="logQuickSession(${i})" title="Log a session without starting timer">++</button>
               <select class="energy-select" onchange="updateField(${i}, 'energy', this.value)">
                 <option value="high" ${p.energy==='high'?'selected':''}>High energy</option>
                 <option value="med"  ${p.energy==='med' ?'selected':''}>Med energy</option>
@@ -573,6 +567,20 @@ function loadActivityLog() {
 
 function saveActivityLog() {
   localStorage.setItem('dashboard879383-activity', JSON.stringify(activityLog));
+}
+
+function logOtherActivity() {
+  const name = prompt('Project name:');
+  if (!name || !name.trim()) return;
+  const entry = {
+    projectName: `Other: ${name.trim()}`,
+    ts: new Date().toISOString()
+  };
+  activityLog.unshift(entry);
+  if (activityLog.length > 50) activityLog.length = 50;
+  saveActivityLog();
+  renderActivityLog();
+  showNotif(`Logged: ${entry.projectName}`);
 }
 
 function renderActivityLog() {

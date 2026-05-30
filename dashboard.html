@@ -53,18 +53,20 @@
         </div>
       </div>
       <div class="activity-log">
-        <h3>Activity</h3>
+        <div class="activity-log-header">
+          <h3>Activity</h3>
+          <button class="activity-other-btn" onclick="logOtherActivity()">+ Other</button>
+        </div>
         <div class="activity-log-window" id="activityLog"></div>
       </div>
     </div>
 
     <div class="completed-panel">
-      <h2>✓ Completed</h2>
-      <ul class="completed-list" id="completedList"></ul>
-      <div class="completed-add">
-        <input type="text" id="completedInput" placeholder="Add completed project..." />
-        <button onclick="addCompleted()">+ Add</button>
+      <div class="completed-panel-header">
+        <h2>✓ Completed</h2>
+        <button class="completed-other-btn" onclick="addOtherCompleted()">+ Other</button>
       </div>
+      <ul class="completed-list" id="completedList"></ul>
     </div>
 
     <div class="chart-panel">

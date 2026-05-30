@@ -530,15 +530,41 @@ header .date {
   padding: 1.5rem;
 }
 
+.completed-panel-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+}
+
+.completed-panel-header h2 {
+  margin-bottom: 0;
+}
+
 .completed-panel h2 {
   font-family: 'Fraunces', serif;
   font-size: 0.85rem;
   font-weight: 300;
   font-style: italic;
   color: var(--ink-soft);
-  margin-bottom: 1rem;
   text-transform: uppercase;
   letter-spacing: 0.08em;
+}
+
+.completed-other-btn {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--ink-soft);
+  font-family: 'DM Mono', monospace;
+  font-size: 0.65rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.completed-other-btn:hover {
+  border-color: var(--low);
+  color: var(--low);
 }
 
 .completed-list {
@@ -575,38 +601,6 @@ header .date {
   transition: color 0.15s;
 }
 .completed-remove:hover { color: var(--high); }
-
-.completed-add {
-  display: flex;
-  gap: 0.4rem;
-  margin-top: 0.5rem;
-}
-
-.completed-add input {
-  flex: 1;
-  background: var(--bg);
-  border: 1px solid var(--border);
-  font-family: 'DM Mono', monospace;
-  font-size: 0.75rem;
-  color: var(--ink);
-  padding: 0.35rem 0.5rem;
-  border-radius: 2px;
-  outline: none;
-}
-.completed-add input:focus { border-color: var(--low); }
-
-.completed-add button {
-  background: var(--low);
-  border: none;
-  color: white;
-  font-family: 'DM Mono', monospace;
-  font-size: 0.72rem;
-  padding: 0.35rem 0.6rem;
-  border-radius: 2px;
-  cursor: pointer;
-  white-space: nowrap;
-}
-.completed-add button:hover { background: #4a7a4a; }
 
 .completed-empty {
   font-size: 0.75rem;
@@ -685,6 +679,33 @@ header .date {
   padding-top: 0.6rem;
 }
 
+.activity-log-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 0.4rem;
+}
+
+.activity-log-header h3 {
+  margin-bottom: 0;
+}
+
+.activity-other-btn {
+  background: transparent;
+  border: 1px solid #3e3a36;
+  color: #a09a94;
+  font-family: 'DM Mono', monospace;
+  font-size: 0.65rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: 2px;
+  cursor: pointer;
+  transition: all 0.15s;
+}
+.activity-other-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
 .activity-log h3 {
   font-family: 'Fraunces', serif;
   font-size: 0.75rem;
@@ -693,7 +714,6 @@ header .date {
   color: #a09a94;
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  margin-bottom: 0.4rem;
 }
 
 .activity-log-window {
