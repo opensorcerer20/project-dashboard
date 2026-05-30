@@ -1,0 +1,1409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Project Dashboard</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Fraunces:ital,wght@0,300;0,600;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #f5f0e8;
+    --surface: #fffdf8;
+    --ink: #1a1714;
+    --ink-soft: #6b6560;
+    --ink-faint: #c4bfb8;
+    --accent: #c85c2d;
+    --accent-soft: #f0e0d6;
+    --high: #c85c2d;
+    --med: #b8962a;
+    --low: #5a8a5a;
+    --border: #ddd8ce;
+    --timer-bg: #1a1714;
+    --timer-fg: #f5f0e8;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Mono', monospace;
+    background: var(--bg);
+    color: var(--ink);
+    min-height: 100vh;
+    padding: 2rem;
+  }
+
+  header {
+    display: flex;
+    align-items: baseline;
+    gap: 1.5rem;
+    margin-bottom: 2.5rem;
+    border-bottom: 2px solid var(--ink);
+    padding-bottom: 1rem;
+  }
+
+  header h1 {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    font-size: 2rem;
+    letter-spacing: -0.02em;
+  }
+
+  header .date {
+    color: var(--ink-soft);
+    font-size: 0.8rem;
+    flex: 1;
+  }
+
+  .export-btn {
+    background: transparent;
+    border: 1px solid var(--ink-soft);
+    color: var(--ink-soft);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    padding: 0.35rem 0.75rem;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+  .export-btn:hover {
+    border-color: var(--ink);
+    color: var(--ink);
+  }
+
+  .layout {
+    display: grid;
+    grid-template-columns: 1fr 320px;
+    gap: 2rem;
+    align-items: start;
+  }
+
+  .sidebar {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    position: sticky;
+    top: 2rem;
+  }
+
+  /* === TIMER PANEL === */
+  .timer-panel {
+    background: var(--timer-bg);
+    color: var(--timer-fg);
+    border-radius: 4px;
+    padding: 1.5rem;
+  }
+
+  .timer-panel h2 {
+    font-family: 'Fraunces', serif;
+    font-size: 0.85rem;
+    font-weight: 300;
+    font-style: italic;
+    color: #a09a94;
+    margin-bottom: 0.5rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .timer-display {
+    font-size: 3.5rem;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    text-align: center;
+    margin: 0.4rem 0;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .timer-label {
+    text-align: center;
+    font-size: 0.72rem;
+    color: #a09a94;
+    margin-bottom: 0.75rem;
+    min-height: 1.2em;
+    font-style: italic;
+  }
+
+  .timer-controls {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .timer-btn {
+    background: #2e2a26;
+    border: 1px solid #3e3a36;
+    color: var(--timer-fg);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.75rem;
+    padding: 0.5rem;
+    cursor: pointer;
+    border-radius: 2px;
+    transition: background 0.15s;
+  }
+  .timer-btn:hover { background: #3e3a36; }
+  .timer-btn.primary {
+    background: var(--accent);
+    border-color: var(--accent);
+    grid-column: 1 / -1;
+    font-size: 0.85rem;
+    padding: 0.65rem;
+  }
+  .timer-btn.primary:hover { background: #b04d22; }
+  .timer-btn.active {
+    background: #5a8a5a;
+    border-color: #5a8a5a;
+  }
+
+  .timer-presets {
+    display: flex;
+    gap: 0.4rem;
+    flex-wrap: wrap;
+  }
+
+  .preset-btn {
+    background: transparent;
+    border: 1px solid #3e3a36;
+    color: #a09a94;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.7rem;
+    padding: 0.3rem 0.6rem;
+    cursor: pointer;
+    border-radius: 2px;
+    transition: all 0.15s;
+  }
+  .preset-btn:hover, .preset-btn.selected {
+    border-color: var(--accent);
+    color: var(--accent);
+  }
+
+  .timer-progress {
+    width: 100%;
+    height: 3px;
+    background: #2e2a26;
+    border-radius: 2px;
+    margin: 0.5rem 0;
+    overflow: hidden;
+  }
+  .timer-progress-bar {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 2px;
+    transition: width 1s linear;
+    width: 100%;
+  }
+
+  /* === PROJECTS === */
+  .projects-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+  }
+
+  .projects-header h2 {
+    font-family: 'Fraunces', serif;
+    font-size: 1.1rem;
+    font-weight: 300;
+    font-style: italic;
+    color: var(--ink-soft);
+  }
+
+  .add-btn {
+    background: transparent;
+    border: 1px solid var(--ink);
+    color: var(--ink);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    padding: 0.35rem 0.75rem;
+    cursor: pointer;
+    border-radius: 2px;
+    transition: all 0.15s;
+  }
+  .add-btn:hover {
+    background: var(--ink);
+    color: var(--bg);
+  }
+
+  .project-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    margin-bottom: 0.75rem;
+    overflow: hidden;
+    transition: box-shadow 0.2s;
+  }
+  .project-card:hover { box-shadow: 0 2px 12px rgba(0,0,0,0.07); }
+
+  .card-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.85rem 1rem 0.85rem 0;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .drag-handle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    flex-shrink: 0;
+    cursor: grab;
+    color: var(--ink-faint);
+    font-size: 0.85rem;
+    padding: 0.85rem 0;
+    self-align: stretch;
+    transition: color 0.15s;
+  }
+  .drag-handle:active { cursor: grabbing; }
+  .project-card:hover .drag-handle { color: var(--ink-soft); }
+  .project-card.dragging { opacity: 0.4; }
+
+  .energy-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .energy-high { background: var(--high); }
+  .energy-med  { background: var(--med); }
+  .energy-low  { background: var(--low); }
+
+  .rename-btn {
+    background: transparent;
+    border: none;
+    font-size: 0.8rem;
+    cursor: pointer;
+    padding: 0 0.2rem;
+    opacity: 0.35;
+    transition: opacity 0.15s;
+    line-height: 1;
+  }
+  .card-header:hover .rename-btn { opacity: 0.8; }
+  .rename-btn:hover { opacity: 1 !important; }
+
+  .card-title {
+    font-size: 0.88rem;
+    font-weight: 500;
+    flex: 1;
+  }
+
+  .card-tag {
+    font-size: 0.65rem;
+    color: var(--ink-soft);
+    border: 1px solid var(--border);
+    padding: 0.15rem 0.4rem;
+    border-radius: 2px;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .card-chevron {
+    color: var(--ink-faint);
+    font-size: 0.7rem;
+    transition: transform 0.2s;
+  }
+  .project-card.open .card-chevron { transform: rotate(90deg); }
+
+  .card-body {
+    display: none;
+    padding: 0 1rem 1rem;
+    border-top: 1px solid var(--border);
+  }
+  .project-card.open .card-body { display: block; }
+
+  .next-action {
+    margin-top: 0.75rem;
+  }
+
+  .next-action label {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink-soft);
+    display: block;
+    margin-bottom: 0.3rem;
+  }
+
+  .next-action input {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.8rem;
+    color: var(--ink);
+    padding: 0.45rem 0.6rem;
+    border-radius: 2px;
+    outline: none;
+    transition: border-color 0.15s;
+  }
+  .next-action input:focus { border-color: var(--accent); }
+
+  .notes-area {
+    margin-top: 0.75rem;
+  }
+
+  .notes-area label {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink-soft);
+    display: block;
+    margin-bottom: 0.3rem;
+  }
+
+  .notes-area textarea {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.78rem;
+    color: var(--ink);
+    padding: 0.45rem 0.6rem;
+    border-radius: 2px;
+    outline: none;
+    resize: vertical;
+    height: calc(8 * 1.5em + 0.9rem);
+    transition: border-color 0.15s;
+  }
+  .notes-area textarea:focus { border-color: var(--accent); }
+
+  .card-actions {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 0.85rem;
+    align-items: center;
+  }
+
+  .start-session-btn {
+    background: var(--accent-soft);
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    padding: 0.35rem 0.7rem;
+    cursor: pointer;
+    border-radius: 2px;
+    transition: all 0.15s;
+  }
+  .start-session-btn:hover {
+    background: var(--accent);
+    color: white;
+  }
+
+  .energy-select {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    color: var(--ink);
+    padding: 0.3rem 0.5rem;
+    border-radius: 2px;
+    outline: none;
+    cursor: pointer;
+  }
+
+  .delete-btn {
+    margin-left: auto;
+    background: transparent;
+    border: none;
+    color: var(--ink-faint);
+    font-size: 0.8rem;
+    cursor: pointer;
+    padding: 0.2rem 0.4rem;
+    transition: color 0.15s;
+  }
+  .delete-btn:hover { color: var(--high); }
+
+  /* === LEGEND === */
+  .legend {
+    display: flex;
+    gap: 1.2rem;
+    margin-bottom: 1.5rem;
+    font-size: 0.7rem;
+    color: var(--ink-soft);
+    align-items: center;
+  }
+  .legend-item { display: flex; align-items: center; gap: 0.35rem; }
+
+  /* === MODAL === */
+  .modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(26,23,20,0.5);
+    z-index: 100;
+    align-items: center;
+    justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+
+  .modal {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1.5rem;
+    width: 100%;
+    max-width: 420px;
+  }
+
+  .modal h3 {
+    font-family: 'Fraunces', serif;
+    font-weight: 600;
+    margin-bottom: 1.2rem;
+  }
+
+  .modal label {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink-soft);
+    display: block;
+    margin-bottom: 0.3rem;
+    margin-top: 0.85rem;
+  }
+
+  .modal input, .modal select {
+    width: 100%;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.82rem;
+    color: var(--ink);
+    padding: 0.5rem 0.65rem;
+    border-radius: 2px;
+    outline: none;
+  }
+  .modal input:focus { border-color: var(--accent); }
+
+  .modal-btns {
+    display: flex;
+    gap: 0.5rem;
+    margin-top: 1.2rem;
+    justify-content: flex-end;
+  }
+
+  .modal-btns button {
+    font-family: 'DM Mono', monospace;
+    font-size: 0.78rem;
+    padding: 0.5rem 1rem;
+    border-radius: 2px;
+    cursor: pointer;
+  }
+
+  .btn-cancel {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--ink-soft);
+  }
+  .btn-save {
+    background: var(--accent);
+    border: 1px solid var(--accent);
+    color: white;
+  }
+
+  /* === NOTIFICATION === */
+  .notif {
+    position: fixed;
+    bottom: 2rem;
+    right: 2rem;
+    background: var(--timer-bg);
+    color: var(--timer-fg);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.82rem;
+    padding: 0.8rem 1.2rem;
+    border-radius: 4px;
+    opacity: 0;
+    transform: translateY(10px);
+    transition: all 0.3s;
+    pointer-events: none;
+    z-index: 200;
+  }
+  .notif.show {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  /* === COMPLETED PANEL === */
+  .completed-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 1.5rem;
+  }
+
+  .completed-panel h2 {
+    font-family: 'Fraunces', serif;
+    font-size: 0.85rem;
+    font-weight: 300;
+    font-style: italic;
+    color: var(--ink-soft);
+    margin-bottom: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+  }
+
+  .completed-list {
+    list-style: none;
+    margin-bottom: 0.75rem;
+  }
+
+  .completed-list li {
+    display: flex;
+    align-items: baseline;
+    gap: 0.5rem;
+    font-size: 0.78rem;
+    color: var(--ink);
+    padding: 0.35rem 0;
+    border-bottom: 1px solid var(--border);
+  }
+  .completed-list li:last-child { border-bottom: none; }
+
+  .completed-check {
+    font-size: 14px;
+    flex-shrink: 0;
+    line-height: 1;
+  }
+
+  .completed-name { flex: 1; }
+
+  .completed-remove {
+    background: transparent;
+    border: none;
+    color: var(--ink-faint);
+    font-size: 0.7rem;
+    cursor: pointer;
+    padding: 0 0.2rem;
+    transition: color 0.15s;
+  }
+  .completed-remove:hover { color: var(--high); }
+
+  .completed-add {
+    display: flex;
+    gap: 0.4rem;
+    margin-top: 0.5rem;
+  }
+
+  .completed-add input {
+    flex: 1;
+    background: var(--bg);
+    border: 1px solid var(--border);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--ink);
+    padding: 0.35rem 0.5rem;
+    border-radius: 2px;
+    outline: none;
+  }
+  .completed-add input:focus { border-color: var(--low); }
+
+  .completed-add button {
+    background: var(--low);
+    border: none;
+    color: white;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    padding: 0.35rem 0.6rem;
+    border-radius: 2px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .completed-add button:hover { background: #4a7a4a; }
+
+  .completed-empty {
+    font-size: 0.75rem;
+    color: var(--ink-faint);
+    font-style: italic;
+    padding: 0.5rem 0;
+  }
+
+  /* === ACTIVITY LOG === */
+  .activity-log {
+    margin-top: 0.75rem;
+    border-top: 1px solid #3e3a36;
+    padding-top: 0.6rem;
+  }
+
+  .activity-log h3 {
+    font-family: 'Fraunces', serif;
+    font-size: 0.75rem;
+    font-weight: 300;
+    font-style: italic;
+    color: #a09a94;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 0.4rem;
+  }
+
+  .activity-log-window {
+    height: calc(6 * 1.6em);
+    overflow-y: auto;
+    font-size: 0.72rem;
+    line-height: 1.6;
+    color: #a09a94;
+  }
+
+  .activity-log-window::-webkit-scrollbar { width: 3px; }
+  .activity-log-window::-webkit-scrollbar-track { background: transparent; }
+  .activity-log-window::-webkit-scrollbar-thumb { background: #3e3a36; border-radius: 2px; }
+
+  .activity-entry { color: #c4bfb8; }
+  .activity-entry .proj-name { color: var(--timer-fg); }
+
+  /* session counter in card title */
+  .session-count {
+    font-size: 0.68rem;
+    color: var(--ink-soft);
+    font-weight: 400;
+    margin-right: 0.1rem;
+  }
+
+  /* frog row */
+  .frog-row {
+    padding: 0.6rem 0 0.4rem;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 0.5rem;
+  }
+  .frog-label {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.78rem;
+    color: var(--ink-soft);
+    cursor: pointer;
+    user-select: none;
+  }
+  .frog-label input[type="checkbox"] {
+    cursor: pointer;
+    width: 14px;
+    height: 14px;
+    accent-color: #5a8a5a;
+  }
+
+  /* mark complete button */
+  .mark-complete-btn {
+    background: #3a7a3a;
+    border: 1px solid #2d6b2d;
+    color: white;
+    font-family: 'DM Mono', monospace;
+    font-size: 0.75rem;
+    padding: 0.4rem 0.9rem;
+    border-radius: 2px;
+    cursor: pointer;
+    transition: background 0.15s;
+    width: 200px;
+  }
+  .mark-complete-btn:hover { background: #2d6b2d; }
+
+  /* ++ button */
+  .quick-session-btn {
+    background: transparent;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.72rem;
+    padding: 0.35rem 0.55rem;
+    cursor: pointer;
+    border-radius: 2px;
+    transition: all 0.15s;
+    font-weight: 600;
+  }
+  .quick-session-btn:hover {
+    background: var(--accent);
+    color: white;
+  }
+
+  @media (max-width: 700px) {
+    .layout { grid-template-columns: 1fr; }
+    .sidebar { position: static; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Work Dashboard</h1>
+  <span class="date" id="dateDisplay"></span>
+  <button class="export-btn" onclick="exportData()">⬇ Export data</button>
+</header>
+
+<div class="layout">
+  <div class="projects-col">
+    <div class="legend">
+      <span class="legend-item"><span class="energy-dot energy-high"></span> High energy</span>
+      <span class="legend-item"><span class="energy-dot energy-med"></span> Medium energy</span>
+      <span class="legend-item"><span class="energy-dot energy-low"></span> Low energy</span>
+    </div>
+    <div class="projects-header">
+      <h2>Projects</h2>
+      <button class="add-btn" onclick="openModal()">+ Add project</button>
+    </div>
+    <div id="projectList"></div>
+  </div>
+
+  <div class="sidebar">
+    <div class="timer-panel">
+      <h2>Focus Timer</h2>
+      <div class="timer-progress"><div class="timer-progress-bar" id="progressBar"></div></div>
+      <div class="timer-display" id="timerDisplay">45:00</div>
+      <div class="timer-label" id="timerLabel">Ready</div>
+      <div class="timer-controls">
+        <button class="timer-btn primary" id="startStopBtn" onclick="toggleTimer()">Start</button>
+        <button class="timer-btn" onclick="resetTimer()">Reset</button>
+        <button class="timer-btn" onclick="addTime(5)">+5 min</button>
+      </div>
+      <div class="timer-presets">
+        <button class="preset-btn selected" onclick="setPreset(45, this)">45 min</button>
+        <button class="preset-btn" onclick="setPreset(25, this)">25 min</button>
+        <button class="preset-btn" onclick="setPreset(60, this)">60 min</button>
+        <button class="preset-btn" onclick="setPreset(15, this)">15 min</button>
+      </div>
+      <div class="activity-log">
+        <h3>Activity</h3>
+        <div class="activity-log-window" id="activityLog"></div>
+      </div>
+    </div>
+
+    <div class="completed-panel">
+      <h2>✓ Completed</h2>
+      <ul class="completed-list" id="completedList"></ul>
+      <div class="completed-add">
+        <input type="text" id="completedInput" placeholder="Add completed project..." />
+        <button onclick="addCompleted()">+ Add</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Add Project Modal -->
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal">
+    <h3>Add Project</h3>
+    <label>Project name</label>
+    <input type="text" id="newName" placeholder="e.g. Holographic framework">
+    <label>Category</label>
+    <select id="newCategory">
+      <option value="Writing">Writing</option>
+      <option value="Job Search">Job Search</option>
+      <option value="Design">Design</option>
+      <option value="Streaming">Streaming</option>
+      <option value="Other">Other</option>
+    </select>
+    <label>Energy required</label>
+    <select id="newEnergy">
+      <option value="high">High — needs focus</option>
+      <option value="med" selected>Medium</option>
+      <option value="low">Low — can do tired</option>
+    </select>
+    <label>First next action</label>
+    <input type="text" id="newNext" placeholder="e.g. Open doc and read last section">
+    <div class="modal-btns">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-save" onclick="saveProject()">Add project</button>
+    </div>
+  </div>
+</div>
+
+<div class="notif" id="notif"></div>
+
+<script>
+// ===================== DATA =====================
+const DEFAULT_PROJECTS = [
+  {
+    id: 'job-search',
+    name: 'Job Search',
+    category: 'Job Search',
+    energy: 'high',
+    next: 'Review job boards, filter for fit, begin one application',
+    notes: '',
+    open: false
+  },
+  {
+    id: 'design-doc-1',
+    name: 'Software Design Doc #1',
+    category: 'Writing',
+    energy: 'high',
+    next: 'Read last section written, continue from there',
+    notes: 'Nearly done. Two more design docs to follow.',
+    open: false
+  },
+  {
+    id: 'design-doc-2',
+    name: 'Software Design Doc #2',
+    category: 'Writing',
+    energy: 'med',
+    next: 'Outline the core problem and system approach',
+    notes: '',
+    open: false
+  },
+  {
+    id: 'design-doc-3',
+    name: 'Software Design Doc #3',
+    category: 'Writing',
+    energy: 'med',
+    next: 'Not started — wait until Doc #2 is drafted',
+    notes: '',
+    open: false
+  },
+  {
+    id: 'holographic',
+    name: 'Holographic Framework',
+    category: 'Writing',
+    energy: 'high',
+    next: 'Outline first voice blog episode structure',
+    notes: 'Series of voice blogs with transcripts. Theoretical framework built on holographic principle.',
+    open: false
+  },
+  {
+    id: 'systems-thinking',
+    name: 'Systems Thinking Writing',
+    category: 'Writing',
+    energy: 'med',
+    next: 'Write one page describing how you archive and rotate between systems',
+    notes: 'About your cognitive style: learning systems, archiving them, finding and smoothing friction.',
+    open: false
+  },
+  {
+    id: 'streaming',
+    name: 'AI Coding Stream (evenings)',
+    category: 'Streaming',
+    energy: 'low',
+    next: 'Practice one streaming session with OBS — no audience',
+    notes: 'Evening activity. Audience submits app ideas, you build with AI on stream. Publish code; optionally to itch.io.',
+    open: false
+  }
+];
+
+// ===================== MIGRATION =====================
+function migrateOldKeys() {
+  const migrations = [
+    {
+      oldKey: 'dashboard_projects',
+      newKey: 'dashboard879383-projects',
+      validate: d => Array.isArray(d) && d.length > 0 && d[0].id !== undefined
+    },
+    {
+      oldKey: 'dashboard_completed',
+      newKey: 'dashboard879383-completed',
+      validate: d => Array.isArray(d) && d.every(x => typeof x === 'string')
+    },
+    {
+      oldKey: 'dashboard_activity',
+      newKey: 'dashboard879383-activity',
+      validate: d => Array.isArray(d) && (d.length === 0 || d[0].ts !== undefined)
+    }
+  ];
+
+  migrations.forEach(({ oldKey, newKey, validate }) => {
+    try {
+      const oldRaw = localStorage.getItem(oldKey);
+      const newRaw = localStorage.getItem(newKey);
+      if (!oldRaw || newRaw) return; // nothing to migrate, or new key already has data
+      const parsed = JSON.parse(oldRaw);
+      if (!validate(parsed)) return; // data doesn't look right, skip
+      localStorage.setItem(newKey, oldRaw);
+      localStorage.removeItem(oldKey);
+    } catch { /* silently skip on any error */ }
+  });
+}
+
+migrateOldKeys();
+
+function loadProjects() {
+  try {
+    const saved = localStorage.getItem('dashboard879383-projects');
+    const list = saved ? JSON.parse(saved) : DEFAULT_PROJECTS;
+    const threeDays = 3 * 24 * 60 * 60 * 1000;
+    const frog   = list.filter(p => !p.completed && !p.deleted && p.frog);
+    const recent = list.filter(p => !p.completed && !p.deleted && !p.frog && p.lastSession && (Date.now() - new Date(p.lastSession).getTime()) < threeDays);
+    const rest   = list.filter(p => !frog.includes(p) && !recent.includes(p));
+    return [...frog, ...recent, ...rest];
+  } catch { return DEFAULT_PROJECTS; }
+}
+
+function saveProjects() {
+  localStorage.setItem('dashboard879383-projects', JSON.stringify(projects));
+}
+
+// ===================== COMPLETED =====================
+function loadCompleted() {
+  try {
+    const saved = localStorage.getItem('dashboard879383-completed');
+    return saved ? JSON.parse(saved) : ['Column about QA Test Plans'];
+  } catch { return ['Column about QA Test Plans']; }
+}
+
+function saveCompleted() {
+  localStorage.setItem('dashboard879383-completed', JSON.stringify(completed));
+}
+
+let completed = loadCompleted();
+
+function renderCompleted() {
+  const list = document.getElementById('completedList');
+  list.innerHTML = '';
+  if (completed.length === 0) {
+    list.innerHTML = '<li class="completed-empty">Nothing yet — finish something!</li>';
+    return;
+  }
+  completed.forEach((name, i) => {
+    const li = document.createElement('li');
+    li.innerHTML = `
+      <span class="completed-check">🏆</span>
+      <span class="completed-name">${escHtml(name)}</span>
+      <button class="completed-remove" onclick="removeCompleted(${i})" title="Remove">✕</button>
+    `;
+    list.appendChild(li);
+  });
+}
+
+function addCompleted() {
+  const input = document.getElementById('completedInput');
+  const name = input.value.trim();
+  if (!name) return;
+  completed.unshift(name);
+  saveCompleted();
+  renderCompleted();
+  input.value = '';
+}
+
+function removeCompleted(i) {
+  const name = completed[i];
+  completed.splice(i, 1);
+  saveCompleted();
+  renderCompleted();
+  showNotifUndo(`"${name}" removed from completed.`, () => {
+    completed.splice(i, 0, name);
+    saveCompleted();
+    renderCompleted();
+  });
+}
+
+document.getElementById('completedInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') addCompleted();
+});
+
+let projects = loadProjects();
+let activityLog = [];
+
+// ===================== RENDER =====================
+function render() {
+  const list = document.getElementById('projectList');
+  list.innerHTML = '';
+  projects.forEach((p, i) => {
+    if (p.completed || p.deleted) return;
+    const card = document.createElement('div');
+    card.className = 'project-card' + (p.open ? ' open' : '');
+    card.draggable = true;
+    card.dataset.index = i;
+    card.innerHTML = `
+      <div style="display:flex;align-items:stretch;">
+        <div class="drag-handle" title="Drag to reorder">⠿</div>
+        <div style="flex:1;min-width:0;">
+          <div class="card-header" onclick="toggleCard(${i})">
+            <span class="energy-dot energy-${p.energy}"></span>
+            <span class="card-title">${p.name}&nbsp;<button class="rename-btn" onclick="event.stopPropagation(); renameProject(${i})" title="Rename project">🖊</button>&nbsp;<span class="session-count">${(p.sessions||0) > 0 ? `(${p.sessions} sessions)` : ''}</span></span>
+            ${p.frog ? '<span style="font-size:0.9rem;" title="Eat the frog!">🐸</span>' : ''}
+            ${isRecent(p.lastSession) ? '<span style="font-size:0.9rem;" title="Worked on in last 3 days">🔥</span>' : (isOverdue(p) ? '<span style="font-size:0.9rem;" title="No activity in 2+ weeks">❗</span>' : '')}
+            <span class="card-tag">${p.category}</span>
+            <span class="card-chevron">▶</span>
+          </div>
+          <div class="card-body">
+            <div class="frog-row">
+              <label class="frog-label" onclick="event.stopPropagation()">
+                <input type="checkbox" ${p.frog ? 'checked' : ''} onchange="setFrog(${i}, this.checked)"> 🐸 Eat the frog
+              </label>
+            </div>
+            <div class="next-action">
+              <label>Next action</label>
+              <input type="text" value="${escHtml(p.next)}"
+                onchange="updateField(${i}, 'next', this.value)"
+                placeholder="What's the very next step?">
+            </div>
+            <div class="notes-area">
+              <label>Notes</label>
+              <textarea onchange="updateField(${i}, 'notes', this.value)"
+                placeholder="Context, links, reminders...">${escHtml(p.notes)}</textarea>
+            </div>
+            <div class="card-actions">
+              <button class="start-session-btn" onclick="startSession(${i})">▶ Start 45-min session</button>
+              <button class="quick-session-btn" onclick="logQuickSession(${i})" title="Log a session without starting timer">++</button>
+              <select class="energy-select" onchange="updateField(${i}, 'energy', this.value)">
+                <option value="high" ${p.energy==='high'?'selected':''}>High energy</option>
+                <option value="med"  ${p.energy==='med' ?'selected':''}>Med energy</option>
+                <option value="low"  ${p.energy==='low' ?'selected':''}>Low energy</option>
+              </select>
+              <button class="delete-btn" onclick="deleteProject(${i})" title="Remove project">✕</button>
+            </div>
+            <div style="margin-top:0.5rem;">
+              <button class="mark-complete-btn" onclick="markComplete(${i})">🏆 Mark Complete!</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+    // drag events only on the handle
+    const handle = card.querySelector('.drag-handle');
+    handle.addEventListener('mousedown', () => { card.draggable = true; });
+    card.addEventListener('dragstart', onDragStart);
+    card.addEventListener('dragover',  onDragOver);
+    card.addEventListener('drop',      onDrop);
+    card.addEventListener('dragend',   onDragEnd);
+    list.appendChild(card);
+  });
+}
+
+function escHtml(str) {
+  return (str || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+function isRecent(ts) {
+  if (!ts) return false;
+  return (Date.now() - new Date(ts).getTime()) < 3 * 24 * 60 * 60 * 1000;
+}
+
+function isOverdue(p) {
+  const ref = p.lastSession || p.createdAt;
+  if (!ref) return false;
+  return (Date.now() - new Date(ref).getTime()) >= 14 * 24 * 60 * 60 * 1000;
+}
+
+function setFrog(i, checked) {
+  projects.forEach((p, j) => { if (j !== i) p.frog = false; });
+  projects[i].frog = checked;
+  if (checked) {
+    const project = projects.splice(i, 1)[0];
+    projects.unshift(project);
+  }
+  saveProjects();
+  render();
+}
+
+// ===================== DRAG & DROP =====================
+let dragSrcIndex = null;
+
+function onDragStart(e) {
+  dragSrcIndex = parseInt(e.currentTarget.dataset.index);
+  e.currentTarget.classList.add('dragging');
+  e.dataTransfer.effectAllowed = 'move';
+}
+
+function onDragOver(e) {
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+}
+
+function onDrop(e) {
+  e.preventDefault();
+  const targetIndex = parseInt(e.currentTarget.dataset.index);
+  if (dragSrcIndex === null || dragSrcIndex === targetIndex) return;
+  const moved = projects.splice(dragSrcIndex, 1)[0];
+  projects.splice(targetIndex, 0, moved);
+  saveProjects();
+  render();
+}
+
+function onDragEnd(e) {
+  e.currentTarget.classList.remove('dragging');
+  dragSrcIndex = null;
+}
+
+function markComplete(i) {
+  if (!confirm(`Mark "${projects[i].name}" as complete?`)) return;
+  projects[i].completed = true;
+  saveProjects();
+  // add to completed list if not already there
+  if (!completed.includes(projects[i].name)) {
+    completed.unshift(projects[i].name);
+    saveCompleted();
+  }
+  // log the completion
+  activityLog.unshift({ projectName: projects[i].name, ts: new Date().toISOString(), type: 'complete' });
+  if (activityLog.length > 50) activityLog.length = 50;
+  saveActivityLog();
+  renderActivityLog();
+  render();
+  renderCompleted();
+  showNotif(`🏆 ${projects[i].name} marked complete!`);
+}
+
+function renameProject(i) {
+  const newName = prompt('Rename project:', projects[i].name);
+  if (newName && newName.trim()) {
+    projects[i].name = newName.trim();
+    saveProjects();
+    render();
+  }
+}
+
+function toggleCard(i) {
+  projects[i].open = !projects[i].open;
+  saveProjects();
+  render();
+}
+
+function updateField(i, field, value) {
+  projects[i][field] = value;
+  saveProjects();
+}
+
+function deleteProject(i) {
+  if (confirm(`Remove "${projects[i].name}"?`)) {
+    const removed = projects[i];
+    projects[i].deleted = true;
+    saveProjects();
+    render();
+    showNotifUndo(`"${removed.name}" removed.`, () => {
+      removed.deleted = false;
+      saveProjects();
+      render();
+    });
+  }
+}
+
+// ===================== MODAL =====================
+function openModal() {
+  document.getElementById('modalOverlay').classList.add('open');
+  document.getElementById('newName').focus();
+}
+function closeModal() {
+  document.getElementById('modalOverlay').classList.remove('open');
+}
+function saveProject() {
+  const name = document.getElementById('newName').value.trim();
+  if (!name) return;
+  projects.push({
+    id: 'p' + Date.now(),
+    name,
+    category: document.getElementById('newCategory').value,
+    energy: document.getElementById('newEnergy').value,
+    next: document.getElementById('newNext').value.trim(),
+    notes: '',
+    open: false,
+    createdAt: new Date().toISOString()
+  });
+  saveProjects();
+  render();
+  closeModal();
+  document.getElementById('newName').value = '';
+  document.getElementById('newNext').value = '';
+}
+
+// ===================== TIMER =====================
+let timerTotal = 45 * 60;
+let timerRemaining = 45 * 60;
+let timerRunning = false;
+let timerInterval = null;
+let timerProjectName = null;
+
+function formatTime(s) {
+  const m = Math.floor(s / 60).toString().padStart(2, '0');
+  const sec = (s % 60).toString().padStart(2, '0');
+  return `${m}:${sec}`;
+}
+
+function updateTimerDisplay() {
+  document.getElementById('timerDisplay').textContent = formatTime(timerRemaining);
+  const pct = timerTotal > 0 ? (timerRemaining / timerTotal) * 100 : 100;
+  document.getElementById('progressBar').style.width = pct + '%';
+}
+
+function toggleTimer() {
+  if (timerRunning) {
+    clearInterval(timerInterval);
+    timerRunning = false;
+    document.getElementById('startStopBtn').textContent = 'Resume';
+    document.getElementById('startStopBtn').classList.remove('active');
+  } else {
+    if (timerRemaining <= 0) resetTimer();
+    timerRunning = true;
+    document.getElementById('startStopBtn').textContent = 'Pause';
+    document.getElementById('startStopBtn').classList.add('active');
+    timerInterval = setInterval(() => {
+      timerRemaining--;
+      updateTimerDisplay();
+      if (timerRemaining <= 0) {
+        clearInterval(timerInterval);
+        timerRunning = false;
+        document.getElementById('startStopBtn').textContent = 'Start';
+        document.getElementById('startStopBtn').classList.remove('active');
+        document.getElementById('timerLabel').textContent = '✓ Session complete!';
+        showNotif(timerProjectName ? `Session done: ${timerProjectName}` : 'Session complete!');
+        try { new Audio('data:audio/wav;base64,//uQRAAAAWMSLwUIYAAsYkXgoQwAEaYLWfkWgAI0wWs/ItAAAGDgYtAgAyN+QWaAAihwMWm4G8QQRDiMcCBcH3Cc+CDv/7xA4Tvh9Rz/y8QADBwMWgQAZG/ILNAARQ4GLTcDeIIIhxGOBAuD7hOfBB3/94gcJ3w+o5/5eIAIAAAVwWgQAVQ2ORaIQwEMAJiDg95G4nQL7mQVWI6GwRcfsZAcsKkJvxgxEjzFUgfHoSQ9Qq7KNwqHwuB13MA4a1q/DmBrHgPcmjiGoh//EwC5nGPEmS4RcfkVKOhJf+WOgoxJclFz3kgn//dBA+ya1GhurNn8zb//9NNutNuhz31f////9vt///z+IdAEAAAK4LQIAKobHItEIYCGAExBwe8jcToF9zIKrEdDYIuP2MgOWFSE34wYiR5iqQPj0JIeoVdlG4VD4XA67mAcNa1fhzA1jwHuTRxDUQ//iYBczjHiTJcIuPyKlHQkv/LHQUYkuSi57yQT//uggfZNajQ3Vmz+Zt//+mm3Wm3Q576v////+32///5/EOgAAADVghQAAAAA==').play(); } catch(e) {}
+      }
+    }, 1000);
+  }
+}
+
+function resetTimer() {
+  clearInterval(timerInterval);
+  timerRunning = false;
+  timerRemaining = timerTotal;
+  timerProjectName = null;
+  document.getElementById('startStopBtn').textContent = 'Start';
+  document.getElementById('startStopBtn').classList.remove('active');
+  document.getElementById('timerLabel').textContent = 'Ready';
+  updateTimerDisplay();
+}
+
+function setPreset(minutes, btn) {
+  document.querySelectorAll('.preset-btn').forEach(b => b.classList.remove('selected'));
+  btn.classList.add('selected');
+  timerTotal = minutes * 60;
+  timerRemaining = timerTotal;
+  timerRunning = false;
+  clearInterval(timerInterval);
+  document.getElementById('startStopBtn').textContent = 'Start';
+  document.getElementById('startStopBtn').classList.remove('active');
+  document.getElementById('timerLabel').textContent = 'Ready';
+  updateTimerDisplay();
+}
+
+function addTime(minutes) {
+  timerRemaining = Math.min(timerRemaining + minutes * 60, 180 * 60);
+  timerTotal = Math.max(timerTotal, timerRemaining);
+  updateTimerDisplay();
+}
+
+function startSession(i) {
+  timerProjectName = projects[i].name;
+  timerRemaining = timerTotal;
+  document.getElementById('timerLabel').textContent = projects[i].name;
+  if (!timerRunning) toggleTimer();
+  logSession(i);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+  showNotif(`Starting session: ${projects[i].name}`);
+}
+
+function logQuickSession(i) {
+  logSession(i);
+  showNotif(`Session logged: ${projects[i].name}`);
+}
+
+function logSession(i) {
+  if (!projects[i].sessions) projects[i].sessions = 0;
+  projects[i].sessions++;
+  projects[i].lastSession = new Date().toISOString();
+
+  // bubble to top of list
+  const project = projects.splice(i, 1)[0];
+  projects.unshift(project);
+  saveProjects();
+  render();
+
+  const entry = {
+    projectName: project.name,
+    ts: new Date().toISOString()
+  };
+  activityLog.unshift(entry);
+  if (activityLog.length > 50) activityLog.length = 50;
+  saveActivityLog();
+  renderActivityLog();
+}
+
+// ===================== ACTIVITY LOG =====================
+function loadActivityLog() {
+  try {
+    const saved = localStorage.getItem('dashboard879383-activity');
+    return saved ? JSON.parse(saved) : [];
+  } catch { return []; }
+}
+
+function saveActivityLog() {
+  localStorage.setItem('dashboard879383-activity', JSON.stringify(activityLog));
+}
+
+function renderActivityLog() {
+  const el = document.getElementById('activityLog');
+  if (!activityLog.length) {
+    el.innerHTML = '<span style="color:#3e3a36;font-style:italic;">No sessions yet</span>';
+    return;
+  }
+  el.innerHTML = activityLog.slice(0, 50).map(e =>
+    e.type === 'complete'
+      ? `<div class="activity-entry">- <span class="proj-name">${escHtml(e.projectName)}</span> completed!</div>`
+      : `<div class="activity-entry">- <span class="proj-name">${escHtml(e.projectName)}</span> session done</div>`
+  ).join('');
+}
+
+// ===================== UTILS =====================
+function showNotif(msg) {
+  const el = document.getElementById('notif');
+  el.innerHTML = escHtml(msg);
+  el.classList.add('show');
+  setTimeout(() => el.classList.remove('show'), 3500);
+}
+
+let undoTimer = null;
+function showNotifUndo(msg, undoFn) {
+  const el = document.getElementById('notif');
+  el.innerHTML = `${escHtml(msg)} <button onclick="doUndo()" style="margin-left:0.6rem;background:transparent;border:1px solid #a09a94;color:#f5f0e8;font-family:'DM Mono',monospace;font-size:0.72rem;padding:0.15rem 0.5rem;border-radius:2px;cursor:pointer;">Undo</button>`;
+  el._undoFn = undoFn;
+  el.classList.add('show');
+  if (undoTimer) clearTimeout(undoTimer);
+  undoTimer = setTimeout(() => { el.classList.remove('show'); el._undoFn = null; }, 5000);
+}
+
+function doUndo() {
+  const el = document.getElementById('notif');
+  if (el._undoFn) { el._undoFn(); el._undoFn = null; }
+  el.classList.remove('show');
+  if (undoTimer) clearTimeout(undoTimer);
+}
+
+function exportData() {
+  const data = {
+    exported: new Date().toISOString(),
+    projects,
+    completed,
+    activityLog
+  };
+  const json = JSON.stringify(data, null, 2);
+  const blob = new Blob([json], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `dashboard-export-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+  showNotif('Data exported!');
+}
+
+function updateDate() {
+  const d = new Date();
+  document.getElementById('dateDisplay').textContent =
+    d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric' });
+}
+
+// Close modal on overlay click
+document.getElementById('modalOverlay').addEventListener('click', function(e) {
+  if (e.target === this) closeModal();
+});
+
+// Enter key in modal
+document.getElementById('newName').addEventListener('keydown', e => {
+  if (e.key === 'Enter') saveProject();
+});
+
+// ===================== INIT =====================
+function backfillCreatedAt() {
+  let changed = false;
+  const now = new Date().toISOString();
+  projects.forEach(p => {
+    if (!p.createdAt) { p.createdAt = now; changed = true; }
+  });
+  if (changed) saveProjects();
+}
+
+updateDate();
+updateTimerDisplay();
+activityLog = loadActivityLog();
+backfillCreatedAt();
+render();
+renderCompleted();
+renderActivityLog();
+</script>
+</body>
+</html>
