@@ -70,9 +70,16 @@
     </div>
 
     <div class="chart-panel">
-      <h2>14-day activity</h2>
+      <div class="chart-panel-header">
+        <h2>Recent Activity</h2>
+        <select id="chartDaysSelect" class="chart-days-select" onchange="onChartDaysChange(this.value)">
+          <option value="7">7 days</option>
+          <option value="14" selected>14 days</option>
+          <option value="30">30 days</option>
+        </select>
+      </div>
       <canvas id="activityChart" style="width:100%;display:block;"></canvas>
-      <p class="chart-empty" id="chartEmpty">No sessions in the past 14 days</p>
+      <p class="chart-empty" id="chartEmpty"></p>
     </div>
   </div>
 </div>

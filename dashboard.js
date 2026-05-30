@@ -361,9 +361,19 @@ function onDragEnd(e) {
   dragSrcIndex = null;
 }
 
+function enableLinkedProjects(completedId) {
+  projects.forEach(p => {
+    if (p.disabled && p.linkedTo === completedId && !p.completed && !p.deleted) {
+      p.disabled = false;
+    }
+  });
+}
+
 function markComplete(i) {
   if (!confirm(`Mark "${projects[i].name}" as complete?`)) return;
+  const completedId = projects[i].id;
   projects[i].completed = true;
+  enableLinkedProjects(completedId);
   saveProjects();
   // add to completed list if not already there
   if (!completed.includes(projects[i].name)) {
@@ -598,6 +608,25 @@ function renderActivityLog() {
   renderActivityChart();
 }
 
+function chartLabel(name) {
+  const m = name.match(/^other:\s*(.)/i);
+  return m ? 'O' + m[1].toUpperCase() : name[0].toUpperCase();
+}
+
+function loadChartDays() {
+  const saved = parseInt(localStorage.getItem('dashboard879383-chart-days'));
+  return [7, 14, 30].includes(saved) ? saved : 14;
+}
+
+function saveChartDays(days) {
+  localStorage.setItem('dashboard879383-chart-days', String(days));
+}
+
+function onChartDaysChange(value) {
+  saveChartDays(parseInt(value));
+  renderActivityChart();
+}
+
 function renderActivityChart() {
   const canvas = document.getElementById('activityChart');
   const emptyEl = document.getElementById('chartEmpty');
@@ -606,14 +635,16 @@ function renderActivityChart() {
   const ctx = canvas.getContext('2d');
   const dpr = window.devicePixelRatio || 1;
 
-  // Count entries per project for the past 14 days, split by recency
+  const windowDays = loadChartDays();
+  const windowMs  = windowDays * 24 * 60 * 60 * 1000;
+  const sevenDays = 7 * 24 * 60 * 60 * 1000;
+
+  // Count entries per project within the selected window, split by recency
   const now = Date.now();
-  const sevenDays  = 7  * 24 * 60 * 60 * 1000;
-  const fourteenDays = 14 * 24 * 60 * 60 * 1000;
   const counts = {};
   activityLog.forEach(e => {
     const age = now - new Date(e.ts).getTime();
-    if (age < fourteenDays) {
+    if (age < windowMs) {
       if (!counts[e.projectName]) counts[e.projectName] = { recent: 0, older: 0 };
       if (age < sevenDays) counts[e.projectName].recent++;
       else                 counts[e.projectName].older++;
@@ -626,7 +657,7 @@ function renderActivityChart() {
 
   if (bars.length === 0) {
     canvas.style.display = 'none';
-    if (emptyEl) emptyEl.style.display = 'block';
+    if (emptyEl) { emptyEl.textContent = `No sessions in the past ${windowDays} days`; emptyEl.style.display = 'block'; }
     return;
   }
   canvas.style.display = 'block';
@@ -700,7 +731,57 @@ function renderActivityChart() {
     ctx.font = `10px 'DM Mono', monospace`;
     ctx.fillStyle = '#6b6560';
     ctx.textBaseline = 'top';
-    ctx.fillText(name[0].toUpperCase(), cx, H - padB + 4);
+    ctx.fillText(chartLabel(name), cx, H - padB + 4);
+  });
+
+  // Store bar positions for tooltip hit-testing
+  canvas._chartBars = bars.map(([name], i) => ({
+    name,
+    cx: padL + i * slotW + slotW / 2,
+    halfSlot: slotW / 2
+  }));
+
+  initChartTooltip(canvas);
+}
+
+function initChartTooltip(canvas) {
+  if (canvas._tooltipInit) return;
+  canvas._tooltipInit = true;
+
+  let hoverTimer = null;
+
+  let tooltip = document.getElementById('chartTooltip');
+  if (!tooltip) {
+    tooltip = document.createElement('div');
+    tooltip.id = 'chartTooltip';
+    tooltip.className = 'chart-tooltip';
+    document.body.appendChild(tooltip);
+  }
+
+  canvas.addEventListener('mousemove', e => {
+    clearTimeout(hoverTimer);
+    tooltip.classList.remove('visible');
+
+    const rect = canvas.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const hit = (canvas._chartBars || []).find(b => Math.abs(x - b.cx) <= b.halfSlot);
+    if (!hit) return;
+
+    const cx = e.clientX, cy = e.clientY;
+    hoverTimer = setTimeout(() => {
+      tooltip.textContent = hit.name;
+      const left = (cx + 12 + tooltip.offsetWidth > window.innerWidth)
+        ? (cx - tooltip.offsetWidth - 12)
+        : (cx + 12);
+      tooltip.style.left = left + 'px';
+      tooltip.style.top  = (cy - 28) + 'px';
+      tooltip.classList.add('visible');
+    }, 300);
+  });
+
+  canvas.addEventListener('mouseleave', () => {
+    clearTimeout(hoverTimer);
+    tooltip.classList.remove('visible');
   });
 }
 
@@ -770,4 +851,6 @@ activityLog = loadActivityLog();
 ensureColors();
 render();
 renderCompleted();
+const _sel = document.getElementById('chartDaysSelect');
+if (_sel) _sel.value = String(loadChartDays());
 renderActivityLog();
